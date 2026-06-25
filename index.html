@@ -1,0 +1,871 @@
+  <style>
+body {
+    font-family: Arial, sans-serif;
+    /* 將背景圖片設定為固定，並始終保持置中 */
+    background: url('BGG.png') no-repeat center center fixed;
+    /* 核心邏輯：cover 會讓圖片自動縮放以填滿空間，同時保持比例 */
+    background-size: cover; 
+    /* 補充：設定一個與圖片底色相近的顏色，防止圖片載入前或極端比例下出現白邊 */
+    background-color: #2a2a2a; 
+    color: #fff;
+    text-align: center;
+    margin: 0;
+    min-height: 100vh; /* 確保內容撐開頁面高度 */
+}
+        }
+@media (max-width: 768px) {
+    body {
+        background-size: contain;
+    }
+}
+
+        .container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; max-width: 1200px; margin: 0 auto; }
+        
+        /* 區塊透明度設定 */
+        .box { background: rgba(42, 42, 42, 0.7); padding: 20px; border-radius: 10px; width: 340px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); box-sizing: border-box; position: relative; border: 1px solid rgba(255,255,255,0.1); }
+        .player-box { width: 440px; }
+        
+        #timer-display { font-size: 54px; font-weight: bold; color: #00ffcc; margin: 10px 0; font-family: monospace; }
+        #blind-display { font-size: 26px; color: #ffcc00; margin-bottom: 15px; font-weight: bold; }
+        
+        .hand-counter { background: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.2); }
+        .hand-number { font-size: 22px; color: #ff9f43; font-weight: bold; }
+        
+        .quick-set-zone { background: rgba(0, 0, 0, 0.3); padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid #007bff; }
+        
+        /* 按鈕基礎樣式：玻璃質感 */
+        button { 
+            background: rgba(255, 255, 255, 0.2); 
+            color: #fff; 
+            border: 1px solid rgba(255, 255, 255, 0.3); 
+            padding: 8px 15px; 
+            margin: 4px; 
+            cursor: pointer; 
+            border-radius: 6px; 
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover { background: rgba(255, 255, 255, 0.4); }
+        button:active { transform: translateY(2px); }
+
+        /* 功能與加減按鈕配色 */
+        .btn-start { background: rgba(40, 167, 69, 0.7) !important; border-color: #28a745; }
+        .btn-pause { background: rgba(220, 53, 69, 0.7) !important; border-color: #dc3545; }
+        .btn-action { background: rgba(0, 123, 255, 0.7) !important; border-color: #007bff; }
+        .btn-generator { background: rgba(255, 159, 67, 0.7) !important; color: #000; border-color: #ff9f43; }
+        .btn-hand { background: rgba(255, 159, 67, 0.7) !important; color: #000; }
+
+
+/* 賽事計時按鈕顏色 */
+
+.btn-timer {
+
+    /* 修正：linear-gradient 必須包含角度與至少兩種顏色 */
+
+    background: linear-gradient(135deg, #007bff, #0056b3) !important;
+
+    
+    /* 文字顏色 */
+
+    color: #FFBB00 !important; 
+
+    
+    /* 其他屬性 */
+
+    border: 1px solid #28a745;
+
+    font-size: 11px;
+
+    padding: 5px 8px;
+
+    cursor: pointer;
+
+    border-radius: 6px;
+
+
+    /* 光暈效果 */
+
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 1);
+
+}
+
+/* 積分登記按鈕顏色 */
+
+.btn-score { background: linear-gradient(135deg, #e84393, #b71c1c); !important; color: #770077; border-color: #dc3545; font-size: 11px; padding: 5px 8px; };
+
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 1);
+
+}
+
+/* 統計登記按鈕顏色 */
+
+.btn-history { background: linear-gradient(135deg, #e84393, #b71c1c); !important; color: #770077; border-color: #dc3545; font-size: 11px; padding: 5px 8px; };
+
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 1);
+
+}
+
+
+/* 月榜按鈕顏色 */
+
+.btn-report { background: linear-gradient(135deg, #e84393, #b71c1c); !important; color: #770077; border-color: #dc3545; font-size: 11px; padding: 5px 8px; };
+
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 1);
+
+}
+
+
+/* 按鈕點擊懸停效果 */
+
+.nav-btn:hover {
+
+    transform: scale(1.05);
+
+    filter: brightness(1.2);
+
+}
+
+
+
+.nav-btn {
+
+    padding: 12px 25px;
+
+    margin: 0 10px;
+
+    border-radius: 30px; /* 圓角更明顯 */
+
+    font-size: 16px;
+
+    font-weight: bold;
+
+    border: none;
+
+    cursor: pointer;
+
+    transition: all 0.3s ease;
+
+    color: white;
+
+}
+
+/* 積分榜專用的滾動容器 */
+.history-scroll-container {
+    width: 31%;             /* 手機版佔寬 90% */
+    max-width: 500px;       /* 限制最大寬度，保持精緻感 */
+    height: 500px;          /* 強制高度固定 500px */
+    margin: 20px auto;      /* 上下間距 20px，水平自動置中 */
+    overflow-y: auto;       /* 超過 500px 出現滾輪 */
+    background: rgba(0, 0, 0, 0.4); 
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 10px;
+    box-sizing: border-box; /* 確保 padding 不會撐破容器 */
+}
+
+/* 美化滾動條，確保不會佔用太多視覺空間 */
+.history-scroll-container::-webkit-scrollbar {
+    width: 6px;
+}
+.history-scroll-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+
+/* 專門用來控制表格滾動的容器 */
+.table-scroll-container {
+    max-height: 400px; /* 設定你想要的最大高度，例如 400px */
+    overflow-y: auto;  /* 當內容超過高度，自動顯示垂直滾動條 */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+/* 美化滾動條 (讓它在深色背景下好看) */
+.table-scroll-container::-webkit-scrollbar {
+    width: 8px;
+}
+.table-scroll-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+/* 美化滾動條 (讓它在深色背景下好看) */
+.table-scroll-container::-webkit-scrollbar {
+    width: 8px;
+}
+.table-scroll-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+
+        
+        /* 分數調整按鈕：強調綠/紅 */
+        .btn-plus { background: rgba(40, 167, 69, 0.7) !important; color: #fff; border-color: #28a745; font-size: 11px; padding: 5px 8px; }
+        .btn-minus { background: rgba(220, 53, 69, 0.7) !important; color: #fff; border-color: #dc3545; font-size: 11px; padding: 5px 8px; }
+        
+        input { background: rgba(0,0,0,0.3) !important; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 6px; }
+        .input-bonus { width: 45px; text-align: center; background: rgba(0,0,0,0.3) !important; color: #ffff00; border: 1px solid #ffcc00; font-size: 12px; padding: 4px; }
+        
+        ul { list-style: none; padding: 0; text-align: left; clear: both; }
+        li { background: rgba(51, 51, 51, 0.7); padding: 10px; margin: 6px 0; border-radius: 5px; display: flex; flex-direction: column; gap: 8px; border: 1px solid rgba(255,255,255,0.1); }
+
+/* 積分表容器 */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: rgba(0, 0, 0, 0.4) !important; /* 核心：半透明黑色 */
+    backdrop-filter: blur(5px);              /* 選配：磨砂玻璃模糊感 */
+    border-radius: 10px;
+    overflow: hidden;                        /* 確保圓角生效 */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 表頭與儲存格 */
+th, td {
+    border: 1px solid rgba(255, 255, 255, 0.1); /* 極淡的邊框 */
+    padding: 10px;
+    text-align: center;
+    font-size: 14px;
+    background: transparent;                /* 確保內部儲存格也是透明 */
+    color: #fff;
+}
+
+/* 表頭背景稍微深一點，保持層次感 */
+th {
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 專屬排行榜的玻璃樣式 */
+.glass-report-table {
+    width: 120%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(5px);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-report-table th, 
+.glass-report-table td {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    text-align: center;
+    font-size: 14px;
+    background: transparent !important;
+    color: #fff;
+}
+
+.glass-report-table th {
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+        .info-text { font-size: 12px; color: #00ffcc; background: rgba(0,0,0,0.4); padding: 5px; border-radius: 4px; margin-top: 5px; text-align: left; }
+        #alert-tag { display: none; background: rgba(220, 53, 69, 0.8); color: white; padding: 5px 10px; border-radius: 20px; font-weight: bold; font-size: 14px; margin-bottom: 10px; animation: blink 1s infinite; }
+        .target-blind-row { border: 2px solid #dc3545 !important; background: rgba(80, 27, 27, 0.8) !important; color: #ff9f43 !important; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div id="start-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+        <h1 style="font-size: 3em; margin-bottom: 30px;">♠️♥️ 榮安盃-魚樂玩家 ♣️♦️</h1>
+        <button onclick="enterGame()" style="font-size: 24px; padding: 20px 50px; background: #007bff;">🚀 進 入 魚 池 🚀</button>
+    </div>
+
+    <h1>♠️♥️榮安盃-魚樂玩家♣️♦️</h1>
+
+    <div style="text-align: center; margin-bottom: 20px;">
+        <button onclick="showPage('timer-page')">⏰ 賽事計時</button>
+        <button onclick="showPage('score-page')">📊 積分登記</button>
+        <button onclick="showPage('history-page')">📈 積分統計</button>
+        <button onclick="showPage('report-page')">🈷️ 月積分旁行榜</button>
+    </div>
+
+
+    <div id="timer-page" class="page">
+        <div class="container">
+            <div class="box">
+            <div id="alert-tag">⚠️ 已進入 3000/6000 高盲注階段！</div>
+            <h2>第 <span id="current-level">1</span> 級別</h2>
+            <div id="blind-display">SB: 100 / BB: 200</div>
+            
+           <div class="hand-counter">
+    <div>當前牌局</div>
+    <div class="hand-number">第 <span id="hand-display">1</span> 局</div>
+    <div style="margin-top: 5px;">
+        <button class="btn-action" onclick="startNewHand()" style="background:#007bff; color:#fff;">✨ 開始新局</button>
+        <button onclick="resetHand()" style="font-size:19px; padding:3px 6px;">✨ 重設局數</button>
+    </div>
+</div>
+
+            <div class="quick-set-zone">
+                <div style="font-size: 12px; color: #aaa; margin-bottom: 5px;">👥 人數與時間快速設定</div>
+                <button class="btn-quick" onclick="setupPlayersMode(7)" style="background:#C63300;">👥 7 人 (15分)</button>
+                <button class="btn-quick" onclick="setupPlayersMode(5)" style="background:#2ecc71;">🏆 5 人 (10分)</button>
+                <button class="btn-quick" onclick="setupPlayersMode(3)" style="background:#e67e22;">⚔️ 3 人 (剩8分)</button>
+            </div>
+
+
+            <div id="timer-display">15:00</div>
+            <button class="btn-start" onclick="startTimer()">開始</button>
+            <button class="btn-pause" onclick="pauseTimer()">暫停</button>
+            <button onclick="nextLevel()">下一級別</button>
+            <button onclick="prevLevel()">上一級別</button>
+            <button onclick="resetTimer()" style="background-color: #6c757d;">重設時間</button>
+            <br>
+           <button onclick="testAllSounds()" style="font-size:11px; background:#444; margin-top:10px; color:#aaa;">
+    🔊 測試所有音效
+</button>
+        </div>
+<div class="box">
+                <h2>快速盲注生成</h2>
+           <div style="text-align: left; font-size: 13px; color: #ccc; padding: 5px;">
+                <div>初始小盲：<input type="number" id="gen-sb" value="100" style="width:60px;"></div>
+                <div>初始大盲：<input type="number" id="gen-bb" value="200" style="width:60px;"></div>
+                <div>每級時間：<input type="number" id="gen-time" value="15" style="width:60px;"> 分鐘</div>
+                <div>遞增級數：<input type="number" id="gen-rounds" value="8" style="width:60px;"> 個級別</div>
+            </div>
+                 <button class="btn-generator" onclick="generateMultiplierBlinds()">🔄 一鍵生成盲注表</button>
+            <div class="info-text">💡 智能規則：當盲注翻倍達到 3200/6400 時，系統會自動轉為 3000/6000 基準繼續翻倍。</div>
+
+                <table id="blind-table"><thead><tr><th>級別</th><th>SB/BB</th><th>時間</th></tr></thead><tbody></tbody></table>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="score-page" class="page" style="display: none;">
+        <div class="container">
+            <div class="box player-box">
+                <h2>魚群積分登記</h2>
+                <button id="undo-btn" onclick="undo()" disabled>↩️ 復原</button>
+                <input type="text" id="player-name" placeholder="輸入玩家姓名">
+                <button class="btn-action" onclick="addPlayer()">新增玩家</button>
+                <ul id="player-list"></ul>
+            </div>
+        </div>
+    </div>
+
+
+<div id="history-page" class="page" style="display: none;">
+    <div class="container">
+        <div class="header-action" style="width: 100%; text-align: center; margin-bottom: 15px;">
+            <button onclick="endRound()" class="btn-action" style="font-size: 18px; padding: 12px 30px;">
+                ✅ 結算本局並紀錄
+            </button>
+        </div>
+        
+        <div id="history-list" style="width: 100%;"></div>
+    </div>
+</div>
+
+
+<div id="report-page" class="page" style="display: none;">
+    <div class="container">
+        <div id="monthly-report-list"></div>
+    </div>
+</div>
+    <script>
+
+
+        // JS 邏輯維持原樣
+
+// 儲存每一局的結算到 localStorage
+function saveMonthlyData() {
+    localStorage.setItem('gameHistory', JSON.stringify(gameHistory));
+}
+
+// 讀取資料 (在頁面載入時執行)
+function loadData() {
+    let savedData = localStorage.getItem('gameHistory');
+    if (savedData) {
+        gameHistory = JSON.parse(savedData);
+        renderHistory();
+        renderMonthlyReport(); // 載入後自動計算月報表
+    }
+}
+
+//清除資料
+function clearAllData() {
+    if (confirm("確定要清除所有積分紀錄嗎？此動作無法復原！")) {
+        localStorage.removeItem('gameHistory'); // 清除存檔
+        gameHistory = [];                       // 清空記憶體
+        renderHistory();                        // 清空歷史頁面
+        renderMonthlyReport();                  // 清空報表頁面
+        alert("資料已清空");
+    }
+}
+
+// 排行榜
+function renderMonthlyReport(selectedMonthYear) {
+    const now = new Date();
+    const targetMonth = selectedMonthYear ? parseInt(selectedMonthYear.split('-')[0]) : now.getMonth() + 1;
+    const targetYear = selectedMonthYear ? parseInt(selectedMonthYear.split('-')[1]) : now.getFullYear();
+    
+    let reportMap = {};
+    gameHistory.forEach(round => {
+        if (round.year === targetYear && round.month === targetMonth) {
+            round.players.forEach(p => {
+                if (!reportMap[p.name]) reportMap[p.name] = 0;
+                reportMap[p.name] += p.score;
+            });
+        }
+    });
+
+// --- 新增：找出最高積分 ---
+    const scores = Object.values(reportMap);
+    const maxScore = scores.length > 0 ? Math.max(...scores) : 0;
+
+    let list = document.getElementById('monthly-report-list');
+    
+    // 使用 flex 佈局確保三者垂直排列且間距美觀
+list.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
+            <div>
+                <select onchange="renderMonthlyReport(this.value)" style="padding: 5px; border-radius: 4px;">
+                    <option value="6-2026" ${targetMonth===6 && targetYear===2026 ? 'selected' : ''}>2026年 6月</option>
+                    <option value="5-2026" ${targetMonth===5 && targetYear===2026 ? 'selected' : ''}>2026年 5月</option>
+                </select>
+            </div>
+
+            <table class="glass-report-table">
+                <thead><tr><th>姓名</th><th>總積分</th></tr></thead>
+                <tbody>
+                    ${Object.keys(reportMap).length > 0 
+                        ? Object.keys(reportMap).map(name => {
+                            // 判斷是否為最高分
+                            const isFirst = reportMap[name] === maxScore && maxScore > 0;
+                            return `<tr>
+                                <td>${isFirst ? '👑 ' : ''}${name}</td>
+                                <td>${reportMap[name]}</td>
+                            </tr>`;
+                          }).join('')
+                        : '<tr><td colspan="2">本月尚無賽事紀錄</td></tr>'}
+                </tbody>
+            </table>
+
+            <button onclick="clearAllData()" style="font-size: 16px; background:#ff4d4d; color:white; border:none; padding: 10px 20px; border-radius: 5px; cursor:pointer;">
+                🗑️ 清除所有歷史數據
+            </button>
+        </div>
+    `;
+}
+
+function updateMonthSelector() {
+    const selector = document.getElementById('month-selector');
+    // 取得所有紀錄中的年月，並去重複
+    let months = [...new Set(gameHistory.map(h => `${h.month}-${h.year}`))];
+    
+    // 排序：確保最新的在前面
+    months.sort((a, b) => b.localeCompare(a));
+    
+    selector.innerHTML = months.map(m => {
+        const [mo, yr] = m.split('-');
+        return `<option value="${m}">${yr}年 ${mo}月</option>`;
+    }).join('');
+}
+
+// 全域變數
+let gameHistory = []; // 用來存每一局的紀錄
+
+// 結算一局的函式
+function endRound() {
+    const now = new Date();
+    let snapshot = {
+        round: gameHistory.length + 1,
+        players: JSON.parse(JSON.stringify(players)),
+        year: now.getFullYear(),
+        month: now.getMonth() + 1,
+        timestamp: now.toLocaleString()
+    };
+    
+    // 存入紀錄
+    gameHistory.push(snapshot);
+    localStorage.setItem('gameHistory', JSON.stringify(gameHistory)); 
+    
+    // 渲染更新
+    renderHistory();
+    renderMonthlyReport(); 
+    alert("第 " + snapshot.round + " 局已結算並紀錄！");
+}
+//積分榜
+function renderHistory() {
+    let container = document.getElementById('history-list');
+    
+    // 1. 初始化容器，建立滾動區域
+container.innerHTML = `<div class="history-scroll-container" id="history-scroll"></div>`;
+    let scrollArea = document.getElementById('history-scroll');
+    
+    // 2. 確保 gameHistory 有資料
+    if (gameHistory.length === 0) {
+        scrollArea.innerHTML = "<p style='text-align:center; padding:20px;'>目前沒有賽事紀錄</p>";
+        return;
+    }
+    // 3. 遍歷數據並正確追加到 scrollArea，不要再動 container
+[...gameHistory].reverse().forEach(record => {
+        scrollArea.innerHTML += `
+            <div class="box" style="margin-top:10px; margin-bottom:10px;">
+                <h3>第 ${record.round} 局 (${record.timestamp})</h3>
+                <table class="glass-table">
+                    <thead><tr><th>姓名</th><th>總積分</th></tr></thead>
+                    <tbody>
+                        ${record.players.map(p => `<tr><td>${p.name}</td><td>${p.score}</td></tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    });
+}
+        let blindStructure = [
+            { level: 1, sb: 100, bb: 200, time: 10 },
+            { level: 2, sb: 200, bb: 400, time: 10 },
+            { level: 3, sb: 400, bb: 800, time: 10 },
+            { level: 4, sb: 800, bb: 1600, time: 10 },
+            { level: 5, sb: 1600, bb: 3200, time: 10 },
+            { level: 6, sb: 3000, bb: 6000, time: 10 },
+            { level: 7, sb: 6000, bb: 12000, time: 10 },
+            { level: 8, sb: 12000, bb: 24000, time: 10 },
+            { level: 9, sb: 24000, bb: 48000, time: 10 },
+            { level: 10, sb: 48000, bb: 96000, time: 10 }
+        ];
+
+        let currentLevelIndex = 0;
+        let timeLeft = blindStructure[currentLevelIndex].time * 60;
+        let timerInterval = null;
+
+        let globalRiseSound = new Audio('risebb.m4a');
+        let globalWarningSound = new Audio('timesup1.m4a');
+        let hasPlayedWarningThisLevel = false;
+
+        let players = [
+            { name: "迪西", score: 0, bonus: 0, bounty: 0 },
+            { name: "植物", score: 0, bonus: 0, bounty: 0 },
+            { name: "鈺恆", score: 0, bonus: 0, bounty: 0 },
+            { name: "Pork", score: 0, bonus: 0, bounty: 0 },
+            { name: "建中", score: 0, bonus: 0, bounty: 0 },
+            { name: "Chris", score: 0, bonus: 0, bounty: 0 },
+            { name: "采熙", score: 0, bonus: 0, bounty: 0 },
+            { name: "曉晴", score: 0, bonus: 0, bounty: 0 }
+        ];
+        let currentHand = 1;
+        let historyStack = [];
+
+        function init() {
+            renderBlindTable();
+            updateBlindDisplay();
+            updateTimerDisplay();
+            updateHandDisplay();
+            renderPlayers();
+        }
+
+function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+            document.getElementById(pageId).style.display = 'block';
+if (pageId === 'report-page') {
+        renderMonthlyReport(); // 這樣點進去就會直接出現內容
+    }
+        }
+
+
+function enterGame() {
+        // 1. 隱藏遮罩層
+        document.getElementById('start-overlay').style.display = 'none';
+
+        // 2. 強制預熱音效，強制讓瀏覽器解鎖權限
+        globalRiseSound.play().then(() => {
+            globalRiseSound.pause();
+            globalRiseSound.currentTime = 0;
+        }).catch(e => console.log("升盲音效預熱失敗"));
+
+        globalWarningSound.play().then(() => {
+            globalWarningSound.pause();
+            globalWarningSound.currentTime = 0;
+        }).catch(e => console.log("預警音效預熱失敗"));
+        
+        console.log("遊戲已啟動，音效權限已解鎖");
+    }
+
+function testAllSounds() {
+    // 1. 播放升盲音效
+    globalRiseSound.currentTime = 0;
+    globalRiseSound.play().catch(e => console.log("升盲音效啟動失敗"));
+
+    // 2. 【關鍵】立即播放並暫停預警音效，這會強制讓瀏覽器信任這個音訊來源
+    globalWarningSound.currentTime = 0;
+    globalWarningSound.play().then(() => {
+        globalWarningSound.pause(); // 播放一瞬間後暫停
+        globalWarningSound.currentTime = 0;
+        console.log("預警音效已強制解鎖");
+    }).catch(e => console.log("預警音效解鎖失敗"));
+}
+// 執行「下一局」邏輯
+
+function startNewHand() {
+    if (!confirm("確定要開始新的一局嗎？\n- 牌局數會 +1\n- 盲注回到第 1 級\n- 所有玩家的「獎勵、人頭、土地公」次數將歸 0")) {
+        return;
+    }
+
+    // 1. 儲存目前的狀態供「復原」使用 (必須包含全域變數的備份)
+    saveState(); 
+
+    // 2. 牌局數 +1
+    currentHand++;
+    updateHandDisplay();
+
+    // 3. 盲注回到第 1 級 (Index 0)
+    currentLevelIndex = 0;
+    timeLeft = blindStructure[0].time * 60;
+    hasPlayedWarningThisLevel = false;
+    updateBlindDisplay();
+    updateTimerDisplay();
+    pauseTimer();
+
+    // 4. 所有玩家土地公歸 0
+    players.forEach(p => {
+        p.rebuy = 0;
+    });
+
+    // 4.1 所有玩家獎勵歸 0
+    players.forEach(p => {
+        p.bonus = 0;
+    });
+
+    // 4.2 所有玩家人頭歸 0
+    players.forEach(p => {
+        p.bounty = 0;
+    });
+
+    // 4.3 所有玩家積分歸 0
+    players.forEach(p => {
+    p.score = 0;
+    });
+
+    // 5. 強制刷新玩家列表顯示
+    renderPlayers();
+}
+// 修改 saveState，將盲注級別和牌局數也存進去
+function saveState() {
+    let snapshot = {
+        players: JSON.parse(JSON.stringify(players)),
+        currentLevelIndex: currentLevelIndex,
+        currentHand: currentHand
+    };
+    historyStack.push(snapshot);
+    if (historyStack.length > 10) historyStack.shift();
+    updateUndoButtonState();
+}
+
+// 修改 undo，把全域狀態恢復
+function undo() {
+    if (historyStack.length === 0) return;
+    
+    let state = historyStack.pop();
+    players = state.players;
+    currentLevelIndex = state.currentLevelIndex;
+    currentHand = state.currentHand;
+    
+    // 恢復該級別的殘餘時間 (或直接重設為該級別開始)
+    timeLeft = blindStructure[currentLevelIndex].time * 60;
+    
+    updateHandDisplay();
+    updateBlindDisplay();
+    updateTimerDisplay();
+    renderPlayers();
+    updateUndoButtonState();
+}
+
+function updateRebuy(index, value) {
+    saveState(); // 確保修改前先存狀態
+    players[index].rebuy = parseInt(value) || 0;
+    renderPlayers();
+}
+        function updateUndoButtonState() {
+            document.getElementById('undo-btn').disabled = historyStack.length === 0;
+        }
+
+        function setupPlayersMode(count) {
+            pauseTimer();
+            if (count === 7) { timeLeft = 15 * 60; alert("已設定為 7人模式，本級時間調至 15 分鐘！"); }
+            else if (count === 5) { timeLeft = 10 * 60; alert("已設定為 5人模式，本級時間調至 10 分鐘！"); }
+            else if (count === 3) { timeLeft = 8 * 60; alert("進入 3人決賽！時間調整為剩下 8 分鐘。"); }
+            hasPlayedWarningThisLevel = false;
+            updateTimerDisplay();
+        }
+
+        function updateHandDisplay() { document.getElementById('hand-display').innerText = currentHand; }
+        function changeHand(amount) { currentHand = Math.max(1, currentHand + amount); updateHandDisplay(); }
+        function resetHand() { currentHand = 1; updateHandDisplay(); }
+
+        // 1. 優化音效播放邏輯（移除重複的 alert，只播放音效）
+
+	function playAlertSound() {
+    // 使用 .play() 前先重置時間，確保能連續播放
+    globalRiseSound.currentTime = 0;
+    globalRiseSound.play().catch(e => console.log("等待互動"));
+    
+    // 移除重複彈出的 alert，若需要提示，建議直接顯示在網頁 UI 上，不要用阻塞式的 alert
+    console.log("升盲通知已觸發"); 
+}
+
+function playWarningSound() {
+    globalWarningSound.currentTime = 0;
+    globalWarningSound.play().catch(e => console.log("音效未解鎖"));
+}
+
+        function generateMultiplierBlinds() {
+            let startSb = parseInt(document.getElementById('gen-sb').value) || 100;
+            let startBb = parseInt(document.getElementById('gen-bb').value) || 200;
+            let time = parseInt(document.getElementById('gen-time').value) || 10;
+            let rounds = parseInt(document.getElementById('gen-rounds').value) || 10;
+            let newStructure = [];
+            let currentSb = startSb, currentBb = startBb, isAdjusted = false;
+            for (let i = 1; i <= rounds; i++) {
+                if (!isAdjusted && currentBb >= 6400) { currentSb = 3000; currentBb = 6000; isAdjusted = true; }
+                newStructure.push({ level: i, sb: currentSb, bb: currentBb, time: time });
+                currentSb *= 2; currentBb *= 2;
+            }
+            blindStructure = newStructure; currentLevelIndex = 0; timeLeft = blindStructure[0].time * 60;
+            pauseTimer(); init();
+        }
+
+        function checkSpecialBlind() {
+            let current = blindStructure[currentLevelIndex];
+            document.getElementById('alert-tag').style.display = (current.sb === 3000 && current.bb === 6000) ? 'block' : 'none';
+        }
+
+        function updateTimerDisplay() {
+            let mins = Math.floor(timeLeft / 60), secs = timeLeft % 60;
+            document.getElementById('timer-display').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateBlindDisplay() {
+            let current = blindStructure[currentLevelIndex];
+            document.getElementById('current-level').innerText = current.level;
+            document.getElementById('blind-display').innerText = `SB: ${current.sb} / BB: ${current.bb}`;
+            highlightCurrentLevel(); checkSpecialBlind();
+        }
+
+// 2. 修改計時器邏輯（精準 30 秒觸發）
+function startTimer() {
+    if (timerInterval) return;
+    
+    timerInterval = setInterval(() => {
+        if (timeLeft > 0) {
+            timeLeft--; 
+            updateTimerDisplay();
+            
+            // 當剩餘時間剛好等於 30 秒時播放警告音效
+            if (timeLeft === 30 && !hasPlayedWarningThisLevel) { 
+                hasPlayedWarningThisLevel = true; 
+                playWarningSound(); 
+                // 如果想要在網頁上顯示提示，改用 DOM 操作
+                // alert("⚠️ 牌局提醒：剩餘 30 秒！"); // 建議註解掉這行，以免干擾遊戲節奏
+            }
+        } else {
+            // 時間歸零時，執行升盲
+            playAlertSound(); 
+            nextLevel(); 
+        }
+    }, 1000);
+}
+        function pauseTimer() { clearInterval(timerInterval); timerInterval = null; }
+        function nextLevel() { if (currentLevelIndex < blindStructure.length - 1) { currentLevelIndex++; timeLeft = blindStructure[currentLevelIndex].time * 60; hasPlayedWarningThisLevel = false; updateBlindDisplay(); updateTimerDisplay(); playAlertSound(); } else pauseTimer(); }
+        function prevLevel() { if (currentLevelIndex > 0) { currentLevelIndex--; timeLeft = blindStructure[currentLevelIndex].time * 60; hasPlayedWarningThisLevel = false; updateBlindDisplay(); updateTimerDisplay(); } }
+        function resetTimer() { pauseTimer(); timeLeft = blindStructure[currentLevelIndex].time * 60; hasPlayedWarningThisLevel = false; updateTimerDisplay(); }
+
+        function renderBlindTable() {
+            let tbody = document.querySelector('#blind-table tbody'); tbody.innerHTML = "";
+            blindStructure.forEach((b, index) => {
+                let tr = document.createElement('tr'); tr.id = `blind-row-${index}`;
+                if (b.sb === 3000 && b.bb === 6000) tr.className = 'target-blind-row';
+                tr.innerHTML = `<td>${b.level}</td><td>${b.sb} / ${b.bb}</td><td>${b.time} 分</td>`;
+                tbody.appendChild(tr);
+            });
+            highlightCurrentLevel();
+        }
+
+        function highlightCurrentLevel() {
+            blindStructure.forEach((b, index) => {
+                let row = document.getElementById(`blind-row-${index}`);
+                if (row) {
+                    if (index === currentLevelIndex) { row.style.background = "#444"; row.style.color = (b.sb === 3000 && b.bb === 6000) ? "#ff9f43" : "#00ffcc"; row.style.fontWeight = "bold"; }
+                    else { if (!(b.sb === 3000 && b.bb === 6000)) { row.style.background = "none"; row.style.color = "#fff"; row.style.fontWeight = "normal"; } }
+                }
+            });
+        }
+
+        function addPlayer() {
+            let nameInput = document.getElementById('player-name');
+            if (nameInput.value.trim() === "") return;
+            saveState(); players.push({ name: nameInput.value.trim(), score: 0, bonus: 0, bounty: 0, rebuy: 0 });
+            nameInput.value = ""; renderPlayers();
+        }
+
+        function updateScore(index, amount) { saveState(); players[index].score += parseInt(amount) || 0; renderPlayers(); }
+        function updateBonus(index, val) { saveState(); players[index].bonus = parseInt(val) || 0; }
+        function updateBounty(index, val) { saveState(); players[index].bounty = parseInt(val) || 0; }
+        function triggerBonusAdd(index) { saveState(); players[index].bonus++; players[index].score += 100; players.forEach((p, i) => { if (i !== index) p.score -= 100; }); renderPlayers(); }
+        function triggerBountyAdd(index) { saveState(); players[index].bounty++; players[index].score += 50; renderPlayers(); }
+
+function renderPlayers() {
+    let list = document.getElementById('player-list');
+    list.innerHTML = "";
+    players.forEach((player, index) => {
+        let li = document.createElement('li');
+        li.innerHTML = `
+            <div class="player-info">
+                <span><strong>${player.name}</strong></span>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 3px;">
+                        <span style="color: #aaa; font-size: 11px;">獵頭:</span>
+                        <input type="number" class="input-bonus" value="${player.bounty || 0}" onchange="updateBounty(${index}, this.value)" style="border-color:#ff4d4d; color:#ff4d4d; width: 40px;">
+                        <button onclick="triggerBountyAdd(${index})" style="background: #ff4d4d; color: #fff; border: none; padding: 3px 6px; font-size: 11px; border-radius: 4px; cursor: pointer; font-weight: bold;">🎯 +1</button>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 3px;">
+                        <span style="color: #aaa; font-size: 11px;">獎勵:</span>
+                        <input type="number" class="input-bonus" value="${player.bonus || 0}" onchange="updateBonus(${index}, this.value)" style="width: 40px;">
+                        <button onclick="triggerBonusAdd(${index})" style="background: #ffcc00; color: #000; border: none; padding: 3px 6px; font-size: 11px; border-radius: 4px; cursor: pointer; font-weight: bold;">🏆 +1</button>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 3px;">
+                        <span style="color: #aaa; font-size: 11px;">土地公:</span>
+                        <input type="number" class="input-bonus" value="${player.rebuy || 0}" onchange="updateRebuy(${index}, this.value)" style="border-color:#ff4d4d; color:#ff4d4d; width: 40px;">
+                        <button onclick="triggerRebuyAdd(${index})" style="background: #ffcc00; color: #000; border: none; padding: 3px 6px; font-size: 11px; border-radius: 4px; cursor: pointer; font-weight: bold;">🏧 +1</button>
+                    </div>
+                </div>
+            </div>
+            <div class="player-controls">
+                <span>總積分: <b style="color:#00ffcc; font-size:16px;">${player.score}</b></span>
+                <div>
+                    <button class="btn-plus" onclick="updateScore(${index}, 200)">+200</button>
+                    <button class="btn-minus" onclick="updateScore(${index}, -200)">-200</button>
+                    <button class="btn-plus" onclick="updateScore(${index}, 50)">+50</button>
+                    <button class="btn-minus" onclick="updateScore(${index}, -50)">-50</button>
+                </div>
+            </div>`;
+        list.appendChild(li);
+    });
+}
+
+
+// 處理輸入框手動輸入
+function updateRebuy(index, value) {
+    players[index].rebuy = parseInt(value) || 0;
+    renderPlayers();
+}
+
+// 處理按鈕點擊 +1
+function triggerRebuyAdd(index) {
+    players[index].rebuy = (players[index].rebuy || 0) + 1;
+    renderPlayers();
+}
+        document.addEventListener("DOMContentLoaded", init);
+    </script>
+</body>
+</html>
